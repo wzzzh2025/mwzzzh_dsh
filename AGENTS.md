@@ -183,3 +183,31 @@ Docs accompany every code change: update affected README and JSDoc contracts tog
 ## Vendoring policy
 
 `vendor/` packages are pinned source copies (manifest with upstream SHAs in [vendor/README.md](vendor/README.md)). Update via the sync procedure there; re-apply or retire the logged local modifications; rerun `pnpm run test && pnpm run build`.
+
+---
+
+<!-- LOCAL-ONLY SECTION: 以下为 mwzzzh dsh 本地追加,不属于 upstream。
+     合并 upstream 时保留本节;若与官方内容冲突,官方内容优先。 -->
+
+# 本地记忆协议(memory/)
+
+本节由本地 fork 追加,用于跨会话保存项目进度真相。**不覆盖上面的官方开发规范,两者并存。**
+
+## 开工第一步
+1. 读 `memory/README.md` → `memory/STATE.md`(定位/看板)→ 命中的 `memory/tracks/<t>/STATE.md`。
+2. 要改 `packages/` 或任何源码前:先说明改什么/为什么/影响面,**等用户确认**再动手。
+3. 记忆只写 `memory/`。
+
+## 文件分工
+- `memory/STATE.md` — 主索引 + 调度看板(track 注册表 / 全局 NOW)。**第一个读**。
+- `memory/tracks/<t>/STATE.md` — 单目标现状 + 焦点 + 指针。
+- `memory/ROADMAP.md` 阶段目标 · `BACKLOG.md` 待办 · `DECISIONS.md` 为什么/坑 · `ENV.md` 构建运行手册。
+
+## 写规则
+- 待办只在 `BACKLOG.md`,跨 track 决策只在 `DECISIONS.md`;track STATE 只放现状+焦点+指针。
+- **覆盖重写** STATE/BACKLOG/ROADMAP;**只追加** DECISIONS。STATE ~80 行、track STATE 一屏。
+- 证据标签:`[实测]`(带 file:line / commit)· `[结论]`(durable 决策)· `[待验]`(未验证,**禁进 DECISIONS**)。
+- 接触即纠正:发现记录错 → 当场改/删。
+
+## 与官方规范的关系
+官方 `AGENTS.md` 管**怎么改 DSH 代码**;本节管**项目进度存哪**。冲突时官方优先。

@@ -11700,6 +11700,19 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9
 
+  packages/preset/memory-protocol:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-system-prompt':
+        specifier: workspace:*
+        version: link:../../core/system-prompt
+
   packages/preset/persona:
     dependencies:
       '@deepseek-ai/schemastery':
