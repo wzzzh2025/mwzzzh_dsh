@@ -17,6 +17,9 @@
 import { readdir, readFile, stat } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 
+/** Marker directory holding disabled bundles, one level below a root. */
+export const DISABLED_DIR = '.disabled'
+
 /** Where a skill root came from, mirroring the provider's `SkillSource`. */
 export type RootSource = 'project-dsh' | 'project-agents' | 'user-dsh' | 'user-agents'
 
@@ -46,6 +49,10 @@ export interface SkillEntry {
   metadata: Record<string, string>
   /** Body length in characters, so an empty skill is obvious. */
   bodyChars: number
+  /** Bundle name on disk; the handle mutating operations take. */
+  bundle: string
+  /** Absolute root this skill came from; mutating operations re-check against it. */
+  rootPath: string
 }
 
 /** One skill that was found but rejected, with the reason and a suggested fix. */
@@ -72,6 +79,8 @@ export interface SkillProblem {
 export interface ScanResult {
   roots: RootReport[]
   skills: SkillEntry[]
+  /** Bundles parked under `<root>/.disabled/`, restorable to the catalog. */
+  disabled: SkillEntry[]
   problems: SkillProblem[]
   /** Roots that do not exist; usually the reason a skill is "missing". */
   missingRoots: string[]
@@ -154,6 +163,9 @@ function colonTrap(block: string): { key: string; line: number } | undefined {
   return undefined
 }
 
+/** What `classify` can decide on its own; the caller supplies bundle and root. */
+type ClassifiedSkill = Omit<SkillEntry, 'bundle' | 'rootPath'>
+
 /** Classify one skill file, returning either the entry or the problem. */
 function classify(
   text: string,
@@ -161,7 +173,7 @@ function classify(
   root: RootSource,
   shape: 'directory' | 'file',
   fallbackName: string,
-): { entry: SkillEntry } | { problem: SkillProblem } {
+): { entry: ClassifiedSkill } | { problem: SkillProblem } {
   const split = splitFrontmatter(text)
   if (split === undefined) {
     return {
@@ -243,6 +255,7 @@ export async function scan(input: ScanRoots): Promise<ScanResult> {
   const skills: SkillEntry[] = []
   const problems: SkillProblem[] = []
   const missingRoots: string[] = []
+  const disabled: SkillEntry[] = []
 
   for (const root of scanRoots(input)) {
     let entries
@@ -268,8 +281,11 @@ export async function scan(input: ScanRoots): Promise<ScanResult> {
         try {
           const text = await readFile(file, 'utf8')
           const result = classify(text, file, root.source, 'directory', entry.name)
-          if ('entry' in result) skills.push(result.entry)
-          else problems.push(result.problem)
+          if ('entry' in result) {
+            skills.push({ ...result.entry, bundle: entry.name, rootPath: root.path })
+          } else {
+            problems.push(result.problem)
+          }
         } catch (error) {
           problems.push({
             name: entry.name, path: file, root: root.source, reason: 'read-error',
@@ -282,8 +298,11 @@ export async function scan(input: ScanRoots): Promise<ScanResult> {
         try {
           const text = await readFile(file, 'utf8')
           const result = classify(text, file, root.source, 'file', entry.name.slice(0, -3))
-          if ('entry' in result) skills.push(result.entry)
-          else problems.push(result.problem)
+          if ('entry' in result) {
+            skills.push({ ...result.entry, bundle: entry.name.slice(0, -3), rootPath: root.path })
+          } else {
+            problems.push(result.problem)
+          }
         } catch (error) {
           problems.push({
             name: entry.name, path: file, root: root.source, reason: 'read-error',
@@ -292,14 +311,37 @@ export async function scan(input: ScanRoots): Promise<ScanResult> {
         }
       }
     }
+
+    // Disabled bundles live one level deeper, so the provider never sees them.
+    // Listing them is what makes the toggle reversible from the UI.
+    try {
+      const parked = await readdir(join(root.path, DISABLED_DIR), { withFileTypes: true })
+      for (const entry of parked) {
+        if (!entry.isDirectory()) continue
+        const file = join(root.path, DISABLED_DIR, entry.name, 'SKILL.md')
+        try {
+          await stat(file)
+        } catch {
+          continue
+        }
+        const text = await readFile(file, 'utf8')
+        const result = classify(text, file, root.source, 'directory', entry.name)
+        if ('entry' in result) {
+          disabled.push({ ...result.entry, bundle: entry.name, rootPath: root.path })
+        }
+      }
+    } catch {
+      // No .disabled directory is the normal state.
+    }
     roots.push({ ...root, present: true, entries: count })
   }
 
   // Provider rank order wins duplicate names, so sort the same way.
   const rankOf = new Map(scanRoots(input).map(root => [root.source, root.rank]))
   skills.sort((a, b) => (rankOf.get(a.root) ?? 0) - (rankOf.get(b.root) ?? 0) || a.name.localeCompare(b.name))
+  disabled.sort((a, b) => a.name.localeCompare(b.name))
 
-  return { roots, skills, problems, missingRoots }
+  return { roots, skills, disabled, problems, missingRoots }
 }
 
 /** Render a scan result as short plain text, for CLI use and tests. */
