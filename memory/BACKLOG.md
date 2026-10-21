@@ -3,9 +3,7 @@
 > 唯一待办聚合。每条标 `[track]`。做完的**删**(durable 结论移 DECISIONS,否则消失)。一屏为限。
 
 ## P0
-- `[skill-manager]` **解析诊断**:skill 被忽略时把「文件:行:原因:修法」显示出来(当前只进 logger.warn)
-- `[skill-manager]` 技能列表:名称 / provider / source / rank / 路径 / 可调用性
-- `[skill-manager]` 各 skill 根状态:存在与否、扫到几个、被忽略几个
+- `[skill-manager]` **client UI**:在设置页展示扫描结果(列表 + 诊断 + 根目录状态)
 
 ## P1
 - `[memory-protocol]` 把 `enabled` 开关暴露到 Settings UI(现只能改 patch 文件)

@@ -3003,6 +3003,9 @@ importers:
       '@deepseek-ai/dsh-skill-filesystem':
         specifier: workspace:*
         version: link:../../skill/skill-filesystem
+      '@deepseek-ai/dsh-skill-manager':
+        specifier: workspace:*
+        version: link:../../preset/skill-manager
       '@deepseek-ai/dsh-subprocess':
         specifier: workspace:*
         version: link:../../subprocess/subprocess
@@ -11728,6 +11731,22 @@ importers:
       '@deepseek-ai/dsh-system-prompt':
         specifier: workspace:*
         version: link:../../core/system-prompt
+
+  packages/preset/skill-manager:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-client-connection':
+        specifier: workspace:*
+        version: link:../../client/connection
+      '@deepseek-ai/dsh-skill':
+        specifier: workspace:*
+        version: link:../../skill/skill
 
   packages/ptc-runtime/ptc-runtime:
     devDependencies:

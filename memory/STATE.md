@@ -14,7 +14,8 @@
 - [实测] 品牌文案已改:`packages/client/locale/src/locales/{zh,en}.ts` 的 `brand.localBuild` → `mwzzzh dsh`(原为「DSH 本地构建」,因构建 profile 非 `official`)。
 - [实测] **skill 加载根因**:`SKILL.md` frontmatter 的 `description` 内含 `Keywords: ` 冒号 → YAML `Nested mappings are not allowed in compact mappings` → DSH 仅 `logger.warn` 后**静默跳过**。改 `>-` 折叠块即修好。
 - [实测] **`dsh-memory-protocol` 已建成并验证**:`enabled:true` → 系统提示词多出 `local:memory-protocol` 段;`enabled:false` → 不出现。挂在 `standard.patch.yml` 的 persona 之后。
-- 下一步:自研 `ui-skill-manager` 包(P0 诊断面板)。
+- [实测] **`dsh-skill-manager` host 端已跑通**:`GET /_skill-manager/scan?cwd=<path>` → `roots=4 skills=19 problems=1`,诊断带行号+原因+修法。挂在 **host 层**(`web-app/cordis.patch.yml`)。
+- 下一步:`skill-manager` 的 client UI(设置页展示)。
 
 ## 调度看板(track 注册表)
 | Track | 阶段 | 状态 | 优先级 | Owner | 依赖 | 摘要 | 指针 |

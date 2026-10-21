@@ -11,3 +11,7 @@
 - 2026-10-21 [实测] **`D:\exe\node\node_global` 对当前用户只读**(ACL: Users 仅 ReadAndExecute),`npm i -g` 必 EPERM。一律 `npx pnpm@<ver>` 或用户级 `--prefix`。同理 `registry.npmmirror.com` 有元数据但 tarball 可能 404,失败时换官方源。
 - 2026-10-21 [实测] **新增 workspace 包必须同时注册两处**,否则构建失败:①`pnpm-workspace.yaml` 的 `packages/*/*` 自动覆盖(无需改);②**`tsconfig.host.json` 的 `references` 必须显式加** —— 漏了 tsc 不编译该包,tsdown 报 `Cannot find entry: ["lib/types/{index,startup}.js"]`。
 - 2026-10-21 [结论] **记忆协议用 `ctx.systemPrompt.section()` 注入,不用改 persona。** 段落名 `local:memory-protocol`、order=400、`interpolate:false`;`enabled:false` 时干脆不注册(`apply` 里提前 return),因此开关零副作用、`memory/` 数据不受影响。
+- 2026-10-21 [实测] **preset 里的 `plugins` 只在会话加入该 preset 时才挂载**,所以 web 路由不能写在 preset 里(浏览器没开会话时路由永不注册)。要注册 HTTP 路由必须挂 **host 层**(`packages/bundle/web-app/cordis.patch.yml`)。
+- 2026-10-21 [实测] **`/api` 前缀归 `client-connection` 所有**,它装浏览器信任栅栏,非它自己注册的 `/api` 路径返回 404(不是 401,容易误判成"路由没注册")。自建 web 路由要用非 `/api` 前缀(我们用 `/_skill-manager`)。
+- 2026-10-21 [实测] **新包要能用,除了 `tsconfig.host.json` 加 reference,还必须加进 `packages/bundle/web-app/package.json` 的 `dependencies`**。否则 profile 解析不到,运行时日志报 `failed to import: Cannot find package '@deepseek-ai/dsh-xxx' imported from <DSH_HOME>/profiles/web/`。
+- 2026-10-21 [实测] `packages/client/connection` 是 **client-face 项目,不是 composite**,host 侧 tsconfig **不能** reference 它(报 TS6306);需要它的类型时用结构化声明。

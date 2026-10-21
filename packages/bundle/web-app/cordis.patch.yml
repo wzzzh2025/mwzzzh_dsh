@@ -587,3 +587,13 @@
       name: '@deepseek-ai/dsh-agent-preset-registry'
       config:
         default: standard
+
+# -- local additions (mwzzzh fork) ----------------------------------------
+#
+# Read-only skill diagnostics. Mounted on the HOST plane rather than inside an
+# agent preset: preset `plugins` only mount when a session joins that preset, so
+# a web route declared there would never register for a browser that has not
+# opened a session yet. This row needs only `webServer`.
+- insert:
+    - id: skill-manager
+      name: '@deepseek-ai/dsh-skill-manager'
