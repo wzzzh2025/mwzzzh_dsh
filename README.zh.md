@@ -8,6 +8,30 @@ DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的�
 
 文档：[https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
 
+<a id="mwzzzh-fork"></a>
+## mwzzzh 分支
+
+本仓库是 DeepSeek Harness 0.2.1-rc.2 的本地 fork，发布在 [wzzzh2025/mwzzzh_dsh](https://github.com/wzzzh2025/mwzzzh_dsh)。自研放在独立包和 web-app 组合补丁里，因此 `git pull upstream` 不会撞上 DSH 核心。本 fork 的进度在 `memory/` 目录。
+
+```sh
+git clone https://github.com/wzzzh2025/mwzzzh_dsh.git
+```
+
+把 `upstream` 指回 `deepseek-ai/deepseek-harness`。本 fork 不包含 xfdsh 的 `plugin-updater`；那个插件会从网络替换本树。
+
+<a id="local-plugins"></a>
+### 本地插件
+
+| 能力 | 界面 | 行为 |
+|---|---|---|
+| [技能管理](packages/preset/skill-manager/README.zh.md) | 设置 → 技能 | 清单、解析诊断、创建/导入，可恢复回收站在 `$DSH_HOME/skills-manager/trash` |
+| [Composer 上下文芯片](packages/client/ui-composer-context/README.zh.md) | 输入栏 | 钉死当前模型的 `contextWindow`（64K–1M）；不是单场会话覆盖 |
+| [记忆协议](packages/client/ui-memory-protocol/README.zh.md) | 设置 → 通用 | 可选提示词，动手前先读 `memory/`；关掉只拿掉该段落 |
+| [会话时间轴](packages/client/ui-session-timeline/README.zh.md) | 会话页签 | 跳到某一轮；不回退、不重生成 |
+| [上下文仪表盘](packages/client/ui-context-dashboard/README.zh.md) | 会话页签 / `/context` | 占用、请求拼装、累计用量；不是长度芯片 |
+| [故障转移队列](packages/preset/failover-queue/README.zh.md) | 设置 → 通用 | 默认关；503 / 超时 / 限流切到下一档模型 |
+| [侧栏 Git](packages/preset/git-sidebar/README.zh.md) | 右侧栏 | `status` / `diff` / `commit` 作为额外页签；不抢文件或终端槽 |
+
 ## 开发者预览
 
 DeepSeek Harness 处于 _开发者预览_ 阶段，正在快速迭代。**未来将出现破坏兼容性的变更。**

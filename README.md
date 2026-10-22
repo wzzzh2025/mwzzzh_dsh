@@ -8,6 +8,30 @@ It is built on an **everything-is-a-plugin** architecture and powered by [Cordis
 
 Documentation: [https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
 
+<a id="mwzzzh-fork"></a>
+## mwzzzh fork
+
+This checkout is a local fork of DeepSeek Harness 0.2.1-rc.2, published at [wzzzh2025/mwzzzh_dsh](https://github.com/wzzzh2025/mwzzzh_dsh). Local work lives in independent packages plus the web-app composition patch, so `git pull upstream` does not collide with DSH core. Fork progress lives in the `memory/` directory.
+
+```sh
+git clone https://github.com/wzzzh2025/mwzzzh_dsh.git
+```
+
+Keep `upstream` pointed at `deepseek-ai/deepseek-harness`. This fork does not ship xfdsh `plugin-updater`; that plugin would replace this tree from the network.
+
+<a id="local-plugins"></a>
+### Local plugins
+
+| Capability | UI | Behavior |
+|---|---|---|
+| [Skill manager](packages/preset/skill-manager/README.md) | Settings → Skills | Inventory, parse diagnostics, create/import, recoverable trash under `$DSH_HOME/skills-manager/trash` |
+| [Composer context chip](packages/client/ui-composer-context/README.md) | Input bar | Pins the current model's `contextWindow` (64K–1M); not a per-session override |
+| [Memory protocol](packages/client/ui-memory-protocol/README.md) | Settings → General | Optional prompt to read `memory/` before acting; off removes the paragraph only |
+| [Session timeline](packages/client/ui-session-timeline/README.md) | Session tab | Jump to a turn; no rollback or regenerate |
+| [Context dashboard](packages/client/ui-context-dashboard/README.md) | Session tab / `/context` | Occupancy, request composition, cumulative usage; not the length chip |
+| [Failover queue](packages/preset/failover-queue/README.md) | Settings → General | Off by default; 503 / timeout / rate-limit switches to the next model |
+| [Git sidebar](packages/preset/git-sidebar/README.md) | Right sidebar | `status` / `diff` / `commit` as an extra tab; does not steal Files or Terminal |
+
 ## Developer preview
 
 DeepSeek Harness is in _developer preview_ and iterating rapidly. **THERE WILL BE COMPATIBILITY-BREAKING CHANGES.**
