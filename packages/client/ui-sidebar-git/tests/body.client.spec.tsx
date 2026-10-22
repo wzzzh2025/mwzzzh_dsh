@@ -9,16 +9,17 @@ import { en } from '../src/client/locales.ts'
 
 afterEach(cleanup)
 
-function fixture(overrides: Partial<ComponentProps<typeof GitBody>> = {}) {
-  const status = overrides.status ?? vi.fn(async () => [{ path: 'a.ts', index: ' ', worktree: 'M', untracked: false }])
-  const diff = overrides.diff ?? vi.fn(async () => 'diff --git a')
-  const commit = overrides.commit ?? vi.fn(async () => undefined)
+function fixture(overrides: Partial<ComponentProps<typeof GitBody>> & { emptyCwd?: boolean } = {}) {
+  const { emptyCwd, ...rest } = overrides
+  const status = rest.status ?? vi.fn(async () => [{ path: 'a.ts', index: ' ', worktree: 'M', untracked: false }])
+  const diff = rest.diff ?? vi.fn(async () => 'diff --git a')
+  const commit = rest.commit ?? vi.fn(async () => undefined)
   const props = {
     sessionId: 's1',
     useSessions: (select: (state: { byId: Record<string, { cwd?: string } | undefined> }) => unknown) =>
-      select({ byId: { s1: { cwd: '/repo' } } }),
+      select({ byId: emptyCwd === true ? { s1: {} } : { s1: { cwd: '/repo' } } }),
     t: (key: keyof typeof en) => en[key],
-    ...overrides,
+    ...rest,
     status,
     diff,
     commit,
@@ -27,7 +28,7 @@ function fixture(overrides: Partial<ComponentProps<typeof GitBody>> = {}) {
 }
 
 it('shows no-workspace copy without a cwd', () => {
-  const { props } = fixture({ useSessions: () => undefined })
+  const { props } = fixture({ emptyCwd: true })
   render(<GitBody {...props} />)
   expect(screen.getByText(en.noWorkspace)).toBeTruthy()
 })

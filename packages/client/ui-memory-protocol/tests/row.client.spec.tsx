@@ -58,7 +58,7 @@ it('disables input until a pending write settles', async () => {
 
 it('shows the Chinese label and cannot edit read-only settings', () => {
   const { props, setEnabled } = fixture(false)
-  render(<MemoryProtocolRow {...props} t={key => zh[key]} />)
+  render(<MemoryProtocolRow {...props} t={key => zh[key as keyof typeof zh]} />)
   expect(screen.getByText(zh.title)).toBeTruthy()
   expect(screen.getByRole('switch', { name: zh.title }).hasAttribute('disabled')).toBe(true)
   expect(screen.getByRole('switch').getAttribute('aria-checked')).toBe('true')

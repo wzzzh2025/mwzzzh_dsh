@@ -107,6 +107,7 @@ describe('skill-manager routes', () => {
 
   it('scans, reads, browses, and maps SkillOpError codes', async () => {
     const { routes, projectRoot } = await mount()
+    if (projectRoot === undefined) throw new Error('expected pinned projectRoot')
     await mkdir(join(projectRoot, '.dsh', 'skills', 'demo'), { recursive: true })
     await writeFile(join(projectRoot, '.dsh', 'skills', 'demo', 'SKILL.md'), `---
 name: demo

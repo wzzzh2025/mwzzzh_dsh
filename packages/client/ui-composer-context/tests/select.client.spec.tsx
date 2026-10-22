@@ -30,7 +30,7 @@ function namespace(window: number, user = false): SettingsNamespaceView {
     applies: 'live',
     secrets: [],
     revision: 1,
-  }
+  } as SettingsNamespaceView
 }
 
 const t: ContextCapSelectProps['t'] = makeTranslate(zh)

@@ -36,7 +36,7 @@ describe('bytesToBase64', () => {
 
 describe('createSkillsApi', () => {
   it('binds every host route onto the inject face', async () => {
-    const request = vi.fn(async () => ({ path: '/tmp', text: '---' }))
+    const request = vi.fn(async () => ({ path: '/tmp', text: '---' })) as typeof callSkillManager
     const api = createSkillsApi('/_skill-manager', request)
     await api.scan()
     await api.readFile('/tmp/SKILL.md')
@@ -49,7 +49,7 @@ describe('createSkillsApi', () => {
     await api.listTrash()
     await api.restoreTrash('demo-1')
     await api.purgeTrash('demo-1')
-    expect(request.mock.calls.map(call => call[0])).toEqual([
+    expect(vi.mocked(request).mock.calls.map(call => call[0])).toEqual([
       '/_skill-manager/scan',
       '/_skill-manager/file?path=%2Ftmp%2FSKILL.md',
       '/_skill-manager/browse',
@@ -62,6 +62,6 @@ describe('createSkillsApi', () => {
       '/_skill-manager/trash-restore',
       '/_skill-manager/trash-delete',
     ])
-    expect(request.mock.calls[4]?.[1]).toMatchObject({ method: 'POST' })
+    expect(vi.mocked(request).mock.calls[4]?.[1]).toMatchObject({ method: 'POST' })
   })
 })

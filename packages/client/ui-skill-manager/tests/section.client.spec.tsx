@@ -53,7 +53,8 @@ const scanFixture: ScanResult = {
 }
 
 function fixture(overrides: Partial<SkillsSectionInjected> = {}) {
-  const api: SkillsSectionInjected = {
+  const importZip = vi.fn(async () => undefined)
+  const api = {
     scan: vi.fn(async () => scanFixture),
     readFile: vi.fn(async () => ({ path: '/x', text: '---\nname: demo\n---\n' })),
     browse: vi.fn(async () => ({
@@ -62,13 +63,13 @@ function fixture(overrides: Partial<SkillsSectionInjected> = {}) {
       entries: [
         { name: 'demo-skill', path: '/home/.dsh/skills/demo-skill', kind: 'directory', isSkill: true },
         { name: 'notes.md', path: '/home/.dsh/skills/notes.md', kind: 'file', isSkill: true },
-        { name: 'readme.txt', path: '/home/.dsh/skills/readme.txt', kind: 'file' },
+        { name: 'readme.txt', path: '/home/.dsh/skills/readme.txt', kind: 'file', isSkill: false },
       ],
     })),
     toggle: vi.fn(async () => undefined),
     create: vi.fn(async () => undefined),
     remove: vi.fn(async () => undefined),
-    importZip: vi.fn(async () => undefined),
+    importZip,
     listTrash: vi.fn(async () => [{
       id: 'demo-skill-1',
       name: 'trashed',
@@ -86,7 +87,7 @@ function fixture(overrides: Partial<SkillsSectionInjected> = {}) {
     t: (key: keyof typeof en) => en[key],
     ...api,
   } as ComponentProps<typeof SkillsSection>
-  return { api, props }
+  return { api, props, importZip }
 }
 
 it('shows an empty trash when the host returns none', async () => {
@@ -221,7 +222,7 @@ it('toggles, deletes after confirm, and skips delete when cancelled', async () =
 })
 
 it('imports a zip through the file input', async () => {
-  const { api, props } = fixture()
+  const { api, props, importZip } = fixture()
   render(<SkillsSection {...props} />)
   await screen.findByText('demo-skill')
   const input = document.querySelector('input[type="file"]') as HTMLInputElement
@@ -229,9 +230,7 @@ it('imports a zip through the file input', async () => {
   fireEvent.change(input, { target: { files: [] } })
   expect(api.importZip).not.toHaveBeenCalled()
   fireEvent.change(input, { target: { files: [file] } })
-  await waitFor(() => { expect(api.importZip).toHaveBeenCalled() })
-  expect(api.importZip.mock.calls[0]?.[0]).toBe('user-dsh')
-  expect(api.importZip.mock.calls[0]?.[1]).toBe('pack')
+  await waitFor(() => { expect(importZip).toHaveBeenCalledWith('user-dsh', 'pack', expect.any(Uint8Array)) })
 })
 
 it('rescan button reloads the inventory', async () => {

@@ -24,7 +24,7 @@ function view(value: unknown, user?: unknown): SettingsNamespaceView {
     applies: 'live',
     secrets: [],
     revision: 3,
-  }
+  } as SettingsNamespaceView
 }
 
 it('formats decimal thousand and million counts the way Settings does', () => {

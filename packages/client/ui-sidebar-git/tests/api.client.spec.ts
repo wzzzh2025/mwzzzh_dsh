@@ -24,12 +24,12 @@ describe('callGit', () => {
 
 describe('createGitApi', () => {
   it('binds status, diff, and commit', async () => {
-    const request = vi.fn(async () => ({ entries: [], diff: 'x' }))
+    const request = vi.fn(async () => ({ entries: [], diff: 'x' })) as typeof callGit
     const api = createGitApi('/_git', request)
     await api.status('/repo')
     await api.diff('/repo', 'a.ts')
     await api.commit('/repo', 'msg', ['a.ts'])
-    expect(request.mock.calls.map(call => call[0])).toEqual([
+    expect(vi.mocked(request).mock.calls.map(call => call[0])).toEqual([
       '/_git/status?cwd=%2Frepo',
       '/_git/diff?cwd=%2Frepo&path=a.ts',
       '/_git/commit',

@@ -15,7 +15,12 @@ async function bench() {
   const locale = new LocaleRuntime(ctx)
   locale.setLocale('zh')
   ctx.provide('locale', locale)
-  const register = vi.fn(() => () => undefined)
+  const register = vi.fn<(contribution: {
+    label(): string
+    description(): string
+    available(): boolean
+    ui: { run(): void }
+  }) => () => undefined>(() => () => undefined)
   ctx.provide('commandUi', { register })
   return { ctx, slots: ctx.get('slots') as SlotRegistry, register }
 }
@@ -44,12 +49,8 @@ describe('ui-context-dashboard apply', () => {
     expect(entry.options).toMatchObject({ id: 'context', order: 20 })
     expect(resolveSlotLabel(entry.options.label)).toBe('上下文')
     expect(register).toHaveBeenCalledWith(expect.objectContaining({ name: 'context', ui: expect.objectContaining({ kind: 'action' }) }))
-    const contribution = register.mock.calls[0]![0] as {
-      label(): string
-      description(): string
-      available(): boolean
-      ui: { run(): void }
-    }
+    const contribution = register.mock.calls[0]?.[0]
+    if (contribution === undefined) throw new Error('missing /context contribution')
     expect(contribution.label()).toBe('上下文')
     expect(contribution.description()).toBeTruthy()
     expect(contribution.available()).toBe(true)

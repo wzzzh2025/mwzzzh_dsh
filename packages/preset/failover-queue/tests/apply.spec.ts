@@ -25,7 +25,7 @@ function listeners(ctx: Context): { request: RequestFn; error: ErrorFn } {
 function mount(config?: Failover.Config): Context {
   const ctx = new Context()
   ctx.provide('settings', { configure: () => () => undefined })
-  vi.spyOn(ctx, 'on').mockReturnValue(() => undefined)
+  vi.spyOn(ctx, 'on').mockReturnValue(() => true)
   Failover.apply(ctx, config)
   return ctx
 }

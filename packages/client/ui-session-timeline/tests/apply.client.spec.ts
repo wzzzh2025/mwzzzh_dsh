@@ -46,10 +46,13 @@ describe('ui-session-timeline apply', () => {
     const entry = slots.entries('conversation.view')[0]!
     expect(entry.options).toMatchObject({ id: 'timeline', order: 15 })
     expect(resolveSlotLabel(entry.options.label)).toBe('时间轴')
-    const face = (entry.inject as (sessionId: string) => TimelineViewInjected)('s1')
+    const jump = entry.inject as
+      ((sessionId: string) => TimelineViewInjected & Record<string, unknown>) | undefined
+    if (jump === undefined) throw new Error('missing timeline inject')
+    const face = jump('s1')
     await face.jump(4 as SessionSeq)
     expect(loadThrough).toHaveBeenCalledWith(4)
-    expect(() => (entry.inject as (sessionId: string) => TimelineViewInjected)('missing')).toThrow(/unavailable/)
+    expect(() => jump('missing')).toThrow(/unavailable/)
   })
 
   it('collapses the view on teardown', async () => {

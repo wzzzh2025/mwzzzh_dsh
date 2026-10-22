@@ -36,7 +36,10 @@ it('adds the General row only while served and removes it on disposal', async ()
     remote.emit('settings/document-updated', ['memory-protocol', 1])
     await vi.waitFor(() => { expect(slots.entries('settings.general.item')).toHaveLength(1) })
     expect(slots.entries('settings.general.item')[0]!.options).toMatchObject({ id: 'memory-protocol', order: 18 })
-    const face = slots.entries('settings.general.item')[0]!.inject!() as MemoryProtocolRowInjected
+    const injectFace = slots.entries('settings.general.item')[0]?.inject as
+      (() => MemoryProtocolRowInjected & Record<string, unknown>) | undefined
+    if (injectFace === undefined) throw new Error('missing memory-protocol inject')
+    const face = injectFace()
     const form = ctx.configForms.get('memory-protocol')
     const set = vi.spyOn(form, 'set').mockResolvedValue(false)
     await expect(face.setEnabled(false)).rejects.toThrow('settings write refused')

@@ -37,7 +37,10 @@ it('adds the General row only while served and removes it on disposal', async ()
     remote.emit('settings/document-updated', ['failover-queue', 1])
     await vi.waitFor(() => { expect(slots.entries('settings.general.item')).toHaveLength(1) })
     expect(slots.entries('settings.general.item')[0]!.options).toMatchObject({ id: 'failover-queue', order: 19 })
-    const face = slots.entries('settings.general.item')[0]!.inject!() as FailoverQueueRowInjected
+    const injected = slots.entries('settings.general.item')[0]?.inject as
+      (() => FailoverQueueRowInjected & Record<string, unknown>) | undefined
+    if (injected === undefined) throw new Error('missing failover-queue inject')
+    const face = injected()
     const form = ctx.configForms.get('failover-queue')
     const set = vi.spyOn(form, 'set').mockResolvedValueOnce(true).mockResolvedValueOnce(true).mockResolvedValue(false)
     await expect(face.setEnabled(true)).resolves.toBeUndefined()

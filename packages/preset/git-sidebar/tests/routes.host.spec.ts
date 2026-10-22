@@ -59,7 +59,10 @@ async function mount(options?: { rejection?: 401 | 403; prefix?: string; run?: G
     if (args[0] === 'commit') return { exitCode: 0, stdout: '[main abc] msg\n', stderr: '' }
     return { exitCode: 1, stdout: '', stderr: 'unknown' }
   })
-  apply(ctx, { prefix: options?.prefix, timeoutMs: 1000 }, run)
+  apply(ctx, {
+    timeoutMs: 1000,
+    ...(options?.prefix === undefined ? {} : { prefix: options.prefix }),
+  }, run)
   return { routes, cwd }
 }
 
