@@ -1,27 +1,18 @@
 # track: skill-manager(技能管理 + 解析诊断)
 
-> 目标:在 Web UI 里看清所有 skill 的真实状态(含**为什么没加载**),并做启停/创建/导入。
+> 目标:在 Web UI 里看清所有 skill 的真实状态(含**为什么没加载**),并做启停/创建/导入/回收。
 > 自研独立包,不改 DSH 核心。待办 `[skill-manager]` 在 `../../BACKLOG.md`。
 
 ## 现状
-- [实测] **P0 host 端已跑通**:`packages/preset/skill-manager/`,端点 `GET /_skill-manager/scan?cwd=<path>` → `{roots, skills, problems, missingRoots}`。实测返回 `roots=4 skills=19 problems=1`,并准确抓到官方自带的 `agent-experience` 缺 frontmatter。
-- [实测] 诊断能给出**行号 + 原因 + 修法**:造一个 `description: ... trap: unquoted colon ...` 的坏 skill,返回 `第 2 行的 description 值里含未转义的冒号 → Nested mappings...`,修法 `改用 >- 折叠块或加引号`。
-- [实测] 参考实现 `LunFengChen/dsh-skills-manager`(源码在 `D:\anzhuonixiang\tools\dsh-port\skills-manager-src`,6 文件 ~230KB)耦合 `webRuntime`,0.2.1 已无此服务;`core.js` 不 import 任何 `@deepseek-ai/*`,可安全移植。我们没照搬,自写 core(纯 Node 标准库,无依赖)。
-- [实测] 解析失败只走 `logger.warn`,UI 无感知 → **诊断是本 track 的核心价值**。
+- [实测] host:`packages/preset/skill-manager/`,`GET/POST /_skill-manager/*`,每条路由先 `connection.requestRejection`。
+- [实测] client:`packages/client/ui-skill-manager/`,Settings 导航「技能」(`settings.section` id=`skills` order=16)。
+- [实测] 「查看 SKILL.md」用官方 `Modal`(body portal)。
+- [实测] **删除进回收站**:`$DSH_HOME/skills-manager/trash/<id>/`(bundle + metadata.json);Settings 可恢复或永久删除。`POST /delete` 不再 `rm`。host+client 测已过,覆盖 100%。
 
 ## 焦点
-P0 host 端完成。剩余:①client UI(设置页展示);②P1 启停/详情/目录浏览/ZIP 导入(防 zip-slip)。
+3099 重启后打开设置 →「技能」删一条、恢复、再永久删除,确认磁盘路径。
 
 ## 关键文件
-- 参考源码:`D:\anzhuonixiang\tools\dsh-port\skills-manager-src`
-- DSH 侧:`packages/skill/skill-filesystem/src/index.ts`(`roots()` L244 / `parseSkillFile` L804)
-- 目标包(待建):`packages/client/ui-skill-manager/`
-
-## 设计
-```
-packages/client/ui-skill-manager/
-├── src/index.ts        host:注册 webServer 路由 /api/skill-manager/*
-├── src/core.ts         扫描 + 解析诊断(核心)
-└── src/client/         client 插件 + Panel
-```
-**剔除**:`plugin-updater`(自更新)。
+- host:`packages/preset/skill-manager/src/{index,core,operations,trash}.ts`
+- client:`packages/client/ui-skill-manager/src/client/{index,SkillsSection,api}.ts`
+- 挂载:`packages/bundle/web-app/cordis.patch.yml`(host + `ui-skill-manager` 两行)

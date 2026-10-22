@@ -9,19 +9,17 @@
 - 工具链:Node 22 + `npx pnpm@11.28.5`(全局 pnpm 装不进 `D:\exe\node\node_global`,ACL 只读)。构建 `pnpm run build`,启动 `node --import tsx/esm apps/cli/src/bin.ts web --port <p>`。
 
 ## NOW(此刻)
-- [实测] 源码已跑通:`pnpm install` 1.5 分、`pnpm run build` 9 gates 全过(251s,原生模块用预编译二进制,1.7s)。
-- [实测] 源码实例跑在 **3099**,独立 `DSH_HOME=~/.dsh-src`,`sessions`/`storages` 用 **junction** 指向 `~/.dsh`(符号链接需管理员,junction 不需要)→ 会话历史共用,profile 互不干扰。
-- [实测] 品牌文案已改:`packages/client/locale/src/locales/{zh,en}.ts` 的 `brand.localBuild` → `mwzzzh dsh`(原为「DSH 本地构建」,因构建 profile 非 `official`)。
-- [实测] **skill 加载根因**:`SKILL.md` frontmatter 的 `description` 内含 `Keywords: ` 冒号 → YAML `Nested mappings are not allowed in compact mappings` → DSH 仅 `logger.warn` 后**静默跳过**。改 `>-` 折叠块即修好。
-- [实测] **`dsh-memory-protocol` 已建成并验证**:`enabled:true` → 系统提示词多出 `local:memory-protocol` 段;`enabled:false` → 不出现。挂在 `standard.patch.yml` 的 persona 之后。
-- [实测] **`dsh-skill-manager` host 端已跑通**:`GET /_skill-manager/scan?cwd=<path>` → `roots=4 skills=19 problems=1`,诊断带行号+原因+修法。挂在 **host 层**(`web-app/cordis.patch.yml`)。
-- 下一步:`skill-manager` 的 client UI(设置页展示)。
+- [实测] P2 五项已挂进 3099:`__DSH_BOOT__` 含时间轴/仪表盘/failover/Git/技能管理;`/_git/status` 与 `/_skill-manager/trash` 已挂(未带 cookie 为 401)。
+- [待验] 打开 http://127.0.0.1:3099/?token=xLwe15AGeg5QNrNsW7-5nsBXU4FCYR_TunMpjSMuUHE 点一次:技能回收站、时间轴跳转、`/context`、故障转移开关、右侧栏 Git。
+- 下一步:你点一次确认 UI;P0 仍是芯片/记忆开关;然后 pre-commit `mem.py lint`。
 
 ## 调度看板(track 注册表)
 | Track | 阶段 | 状态 | 优先级 | Owner | 依赖 | 摘要 | 指针 |
 |---|---|---|---|---|---|---|---|
-| skill-manager | M1 | active | P0 | — | — | 技能列表+解析诊断+开关+创建+导入 | `tracks/skill-manager` |
-| memory-protocol | M1 | active | P1 | — | — | 记忆协议注入做成可开关插件 | `tracks/memory-protocol` |
+| skill-manager | M1 | active | P1 | — | — | 回收站已接,待 3099 点一次 | `tracks/skill-manager` |
+| composer-context | M1 | active | P0 | — | — | 芯片已加载,待点一次 | `tracks/composer-context` |
+| memory-protocol | M1 | active | P1 | — | — | Settings 开关已接线,待点一次 | `tracks/memory-protocol` |
+| xfdsh-port | M3 | active | P2 | — | — | 时间轴/仪表盘/failover/Git 已挂载 | `tracks/xfdsh-port` |
 | upstream-sync | M0 | paused | P2 | — | — | 跟随 upstream 合并策略 | `tracks/upstream-sync` |
 
 > 全部待办 → `BACKLOG.md`;阶段验收 → `ROADMAP.md`;派发新 track/sub-track → `README.md` 调度协议。

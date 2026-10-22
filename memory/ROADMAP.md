@@ -15,6 +15,7 @@
 - 目标:建立可持续的 upstream 合并流程,能稳定吃掉官方后续版本。
 - 验收:一次完整的 upstream 合并演练通过,自研包无需改动即可继续工作。
 
-## M3 能力补齐 — 排队
-- 目标:按需搬 xfdsh 其余能力(session timeline、上下文面板、故障转移队列、better sidebar)。
-- 验收:每个能力独立可开关,剔除自更新。
+## M3 能力补齐 — 进行
+- 目标:按需搬 xfdsh 其余能力(session timeline、上下文面板、故障转移队列、侧栏 Git)。不整包搬 better-sidebar。
+- track:`xfdsh-port`
+- 验收:每个能力独立可开关,剔除自更新;3099 上能点到时间轴、`/context`、failover 开关、Git 页。

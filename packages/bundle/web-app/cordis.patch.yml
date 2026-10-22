@@ -303,6 +303,14 @@
     - id: ui-sidebar-files
       name: '@deepseek-ai/dsh-client-ui-sidebar-files'
 
+    # Extra right-sidebar tab: git status / diff / commit. Extension
+    # priority, so it does not replace the official files or terminal tabs.
+    - id: git-sidebar
+      name: '@deepseek-ai/dsh-git-sidebar'
+
+    - id: ui-sidebar-git
+      name: '@deepseek-ai/dsh-client-ui-sidebar-git'
+
     - id: ui-settings
       name: '@deepseek-ai/dsh-client-ui-settings'
 
@@ -412,6 +420,11 @@
     - id: ui-model-selection
       name: '@deepseek-ai/dsh-client-ui-model-selection'
 
+    # Composer context-window chip: writes the current model's contextWindow
+    # through Settings (global for that model, not a per-session cap).
+    - id: ui-composer-context
+      name: '@deepseek-ai/dsh-client-ui-composer-context'
+
     - id: ui-deepseek-model-label-1017
       name: '@deepseek-ai/dsh-client-ui-deepseek-model-label-1017'
 
@@ -456,6 +469,14 @@
 
     - id: ui-trajectory
       name: '@deepseek-ai/dsh-client-ui-trajectory'
+
+    # Read-only turn list: jump in Chat without rewriting the session log.
+    - id: ui-session-timeline
+      name: '@deepseek-ai/dsh-client-ui-session-timeline'
+
+    # Occupancy / composition / usage dashboard. Not the composer length chip.
+    - id: ui-context-dashboard
+      name: '@deepseek-ai/dsh-client-ui-context-dashboard'
 
 # ── the agent plane moves behind agent presets ─────────────────────────────
 #
@@ -597,3 +618,26 @@
 - insert:
     - id: skill-manager
       name: '@deepseek-ai/dsh-skill-manager'
+
+    # Settings page that talks to the host row above. A `dsh.client` row
+    # must appear in this composition or the modules scanner never serves it.
+    - id: ui-skill-manager
+      name: '@deepseek-ai/dsh-client-ui-skill-manager'
+
+    # Memory protocol as a host prompt section so Settings.describe exposes
+    # the `memory-protocol` namespace. A preset `plugins` row would not
+    # register until a session joins that preset, so the General switch
+    # would never appear for a browser that has not opened a session yet.
+    - id: memory-protocol
+      name: '@deepseek-ai/dsh-memory-protocol'
+
+    - id: ui-memory-protocol
+      name: '@deepseek-ai/dsh-client-ui-memory-protocol'
+
+    # Failover queue: host-mounted so Settings.describe exposes the namespace
+    # without an open session. Disabled / empty is a no-op on llm-retry.
+    - id: failover-queue
+      name: '@deepseek-ai/dsh-failover-queue'
+
+    - id: ui-failover-queue
+      name: '@deepseek-ai/dsh-client-ui-failover-queue'

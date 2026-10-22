@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/client/ui-composer-context/README.md
+/:
+  en: dcd1ca4a64d8ec6d
+  zh: 9c2f1318e4b91027
+/deepseek-ai-dsh-client-ui-composer-context:
+  en: cec5523e3a802db8
+  zh: 8a1f55eb4cc590fe
+/deepseek-ai-dsh-client-ui-composer-context/summary:
+  en: 153ed0de066a713f
+  zh: 3739602b13233417
+/deepseek-ai-dsh-client-ui-composer-context/table-of-contents:
+  en: af856ba79fe31b8e
+  zh: 060591b18cd6e6b7
+/deepseek-ai-dsh-client-ui-composer-context/use-this-package:
+  en: 66843ac7fd67c350
+  zh: f7df42e23c845f74
+/deepseek-ai-dsh-client-ui-composer-context/model-experience:
+  en: 85f8cdfc7692e203
+  zh: b3571af80392cff1
+/deepseek-ai-dsh-client-ui-composer-context/model-experience/kv-cache-effect:
+  en: ca75c51c89c2c9b0
+  zh: 564170e4c5d85c71
+/deepseek-ai-dsh-client-ui-composer-context/known-limitations-and-deferred-work:
+  en: bbcc536432ec4d1e
+  zh: be6f66620b2bad59

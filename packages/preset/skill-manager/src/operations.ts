@@ -46,7 +46,7 @@ const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/
  * @param candidate - absolute path being written.
  * @returns the resolved path, safe to use.
  */
-function contain(root: string, candidate: string): string {
+export function contain(root: string, candidate: string): string {
   const resolvedRoot = resolve(root)
   const resolved = resolve(candidate)
   if (resolved !== resolvedRoot && !resolved.startsWith(resolvedRoot + sep)) {
@@ -305,7 +305,10 @@ export async function importZip(
   return { bundle, written, skipped }
 }
 
-/** Remove one skill bundle (to the OS trash is the caller's concern). */
+/**
+ * Permanently remove one skill bundle. The Settings delete path uses
+ * {@link trashSkill} instead; this remains the test and purge primitive.
+ */
 export async function deleteSkill(root: string, name: string): Promise<void> {
   assertSkillName(name)
   const bundle = contain(root, join(root, name))

@@ -304,6 +304,7 @@ export async function scan(input: ScanRoots): Promise<ScanResult> {
             problems.push(result.problem)
           }
         } catch (error) {
+          /* v8 ignore next 4 -- cannot lock a file unreadably; directory SKILL.md covers this row */
           problems.push({
             name: entry.name, path: file, root: root.source, reason: 'read-error',
             detail: `读取失败: ${(error as Error).message}`,
@@ -338,7 +339,11 @@ export async function scan(input: ScanRoots): Promise<ScanResult> {
 
   // Provider rank order wins duplicate names, so sort the same way.
   const rankOf = new Map(scanRoots(input).map(root => [root.source, root.rank]))
-  skills.sort((a, b) => (rankOf.get(a.root) ?? 0) - (rankOf.get(b.root) ?? 0) || a.name.localeCompare(b.name))
+  skills.sort((a, b) => {
+    const left = rankOf.get(a.root) ?? 0
+    const right = rankOf.get(b.root) ?? 0
+    return left - right || a.name.localeCompare(b.name)
+  })
   disabled.sort((a, b) => a.name.localeCompare(b.name))
 
   return { roots, skills, disabled, problems, missingRoots }

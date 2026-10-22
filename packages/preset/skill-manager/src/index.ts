@@ -3,7 +3,9 @@
  *
  * Routes are registered on `ctx.webServer` under `/_skill-manager`, NOT under
  * `/api`: that prefix belongs to `client-connection`, which installs the browser
- * trust fence there and answers 404 for paths it did not register itself.
+ * trust fence there and answers 404 for paths it did not register itself. Each
+ * handler still calls `connection.requestRejection` first, so an unauthenticated
+ * or cross-site caller never reaches the inventory or a write.
  *
  * Every mutating route takes a root `source` label rather than an arbitrary
  * path, and `operations.ts` re-checks containment against that root, so a
@@ -21,23 +23,36 @@ import type {} from '@deepseek-ai/dsh-host-webserver'
 import { scan, scanRoots } from './core.ts'
 import type { RootSource, ScanRoots } from './core.ts'
 import {
-  SkillOpError, browse, createSkill, deleteSkill, importZip, readSkillFile, setEnabled,
+  SkillOpError, browse, createSkill, importZip, readSkillFile, setEnabled,
 } from './operations.ts'
+import { listTrash, purgeTrash, restoreTrash, trashSkill } from './trash.ts'
 
 export type {
   RootReport, RootSource, ScanResult, SkillEntry, SkillProblem,
 } from './core.ts'
 export type { BrowseEntry } from './operations.ts'
+export type { TrashEntry } from './trash.ts'
 export { scan, scanRoots, summarize } from './core.ts'
 export {
   SkillOpError, browse, createSkill, deleteSkill, importZip, readSkillFile, setEnabled,
 } from './operations.ts'
+export { assertTrashId, listTrash, moveTree, purgeTrash, restoreTrash, trashSkill } from './trash.ts'
 
 /** Cordis plugin name. */
 export const name = 'skill-manager'
 
-/** The web server this row serves from. */
-export const inject = ['webServer']
+/** The web server this row serves from, plus the browser-trust fence. */
+export const inject = ['webServer', 'connection']
+
+/** Trust surface consumed here; the browser-side connection package owns the full type. */
+interface SkillManagerConnection {
+  requestRejection(request: { readonly headers: IncomingMessage['headers'] }): 401 | 403 | undefined
+}
+
+/** The composition's connection service (typed locally: its package is a Client face). */
+function connectionOf(ctx: Context): SkillManagerConnection {
+  return Reflect.get(ctx, 'connection') as SkillManagerConnection
+}
 
 /** Plugin config. */
 export interface Config {
@@ -81,6 +96,11 @@ function rootPathOf(config: Config, url: URL, source: string): string {
 /** All root paths, for the browser's containment check. */
 function allRootPaths(config: Config, url: URL): string[] {
   return scanRoots(rootsFor(config, url)).map(root => root.path)
+}
+
+/** Trash directory for this process's DSH home. */
+function trashHomeOf(config: Config, url: URL): string {
+  return join(rootsFor(config, url).dshHome, 'skills-manager', 'trash')
 }
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
@@ -135,12 +155,25 @@ export function apply(ctx: Context, config: Config = {}): void {
 
   const route = (
     suffix: string,
+    method: 'GET' | 'POST',
     handler: (url: URL, req: IncomingMessage) => Promise<unknown>,
   ): void => {
     ctx.effect(() => ctx.webServer.register({
       kind: 'exact',
       path: `${prefix}${suffix}`,
       handler: async (req: IncomingMessage, res: ServerResponse) => {
+        const rejection = connectionOf(ctx).requestRejection(req)
+        if (rejection !== undefined) {
+          res.statusCode = rejection
+          res.end()
+          return
+        }
+        if ((req.method ?? 'GET') !== method) {
+          res.statusCode = 405
+          res.setHeader('allow', method)
+          res.end()
+          return
+        }
         try {
           const url = new URL(req.url ?? prefix, 'http://localhost')
           sendJson(res, 200, await handler(url, req))
@@ -152,23 +185,23 @@ export function apply(ctx: Context, config: Config = {}): void {
   }
 
   // GET /scan — the full inventory plus diagnostics.
-  route('/scan', async url => scan(rootsFor(config, url)))
+  route('/scan', 'GET', async url => scan(rootsFor(config, url)))
 
   // GET /file?path=… — one skill file for the detail view.
-  route('/file', async (url) => {
+  route('/file', 'GET', async (url) => {
     const path = url.searchParams.get('path')
     if (path === null) throw new SkillOpError('bad-request', '缺少 path')
     return readSkillFile(allRootPaths(config, url), path)
   })
 
   // GET /browse?path=… — directory browser restricted to the skill roots.
-  route('/browse', async (url) => {
+  route('/browse', 'GET', async (url) => {
     const path = url.searchParams.get('path') ?? undefined
     return browse(allRootPaths(config, url), path)
   })
 
   // POST /toggle — { source, name, enabled }
-  route('/toggle', async (url, req) => {
+  route('/toggle', 'POST', async (url, req) => {
     const body = await readJson(req, 64 * 1024)
     const source = String(body.source ?? '')
     const skill = String(body.name ?? '')
@@ -178,7 +211,7 @@ export function apply(ctx: Context, config: Config = {}): void {
   })
 
   // POST /create — { source, name, description, body }
-  route('/create', async (url, req) => {
+  route('/create', 'POST', async (url, req) => {
     const body = await readJson(req, 256 * 1024)
     const result = await createSkill(
       rootPathOf(config, url, String(body.source ?? '')),
@@ -189,15 +222,38 @@ export function apply(ctx: Context, config: Config = {}): void {
     return { ok: true, path: result }
   })
 
-  // POST /delete — { source, name }
-  route('/delete', async (url, req) => {
+  // POST /delete — { source, name }; moves the bundle into the trash.
+  route('/delete', 'POST', async (url, req) => {
     const body = await readJson(req, 64 * 1024)
-    await deleteSkill(rootPathOf(config, url, String(body.source ?? '')), String(body.name ?? ''))
+    const source = String(body.source ?? '') as RootSource
+    const id = await trashSkill(
+      rootPathOf(config, url, source),
+      String(body.name ?? ''),
+      source,
+      trashHomeOf(config, url),
+    )
+    return { ok: true, id }
+  })
+
+  // GET /trash — recoverable deletions, newest first.
+  route('/trash', 'GET', async url => ({ entries: await listTrash(trashHomeOf(config, url)) }))
+
+  // POST /trash-restore — { id }
+  route('/trash-restore', 'POST', async (url, req) => {
+    const body = await readJson(req, 64 * 1024)
+    const path = await restoreTrash(trashHomeOf(config, url), String(body.id ?? ''))
+    return { ok: true, path }
+  })
+
+  // POST /trash-delete — { id }; permanent.
+  route('/trash-delete', 'POST', async (url, req) => {
+    const body = await readJson(req, 64 * 1024)
+    await purgeTrash(trashHomeOf(config, url), String(body.id ?? ''))
     return { ok: true }
   })
 
   // POST /import — { source, name, base64 } where base64 is a zip archive.
-  route('/import', async (url, req) => {
+  route('/import', 'POST', async (url, req) => {
     const body = await readJson(req, Math.ceil(maxImport * 1.4) + 4096)
     const base64 = String(body.base64 ?? '')
     if (base64.length === 0) throw new SkillOpError('bad-request', '缺少 base64')

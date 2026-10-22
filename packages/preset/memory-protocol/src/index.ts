@@ -3,23 +3,27 @@
  *
  * A project that keeps its progress truth in `memory/` needs every session to
  * read that directory before acting. `AGENTS.md` covers this when the file is
- * present, but a preset-mounted section survives projects whose agent
+ * present, but a host-mounted section survives projects whose agent
  * instructions are absent or owned by someone else — and, unlike editing
- * `AGENTS.md`, it can be switched off per preset.
+ * `AGENTS.md`, it can be switched off from Settings.
+ *
+ * Host mounting is required for the Settings namespace to appear in
+ * `settings.describe`. A preset `plugins` row only loads after a session joins
+ * that preset, so a browser with no session would never see the switch.
  *
  * The section is inert unless the workspace actually has `memory/`: the text
- * itself is conditional, so mounting this row in a preset that also serves
+ * itself is conditional, so mounting this row on a host that also serves
  * unrelated repositories costs one short paragraph and changes nothing.
  *
- * `enabled: false` drops the section entirely, which is the switch a "plain
- * chat" preset wants. Flipping it changes only what the model is told — the
- * `memory/` files on disk are never touched.
+ * `enabled: false` drops the section entirely. Flipping it changes only what
+ * the model is told — the `memory/` files on disk are never touched.
  * @module @deepseek-ai/dsh-memory-protocol
  */
 
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@deepseek-ai/dsh-settings'
 
 /** Cordis plugin name. */
 export const name = 'memory-protocol'
@@ -47,7 +51,7 @@ export const DEFAULT_PROTOCOL = 'This project may keep its progress truth in a `
 export interface Config {
   /**
    * Contribute the protocol section. `false` drops it, leaving the workspace
-   * files untouched — the switch a preset uses to opt out.
+   * files untouched — the switch Settings uses to opt out.
    */
   enabled?: boolean
   /**
@@ -71,10 +75,13 @@ export const Config: z<Config> = z.object({
 
 /**
  * Register the memory-protocol section for the mounting context's scope.
- * @param ctx - an agent scope context that carries the prompt registry.
+ * @param ctx - a host or agent-scope context that carries the prompt registry.
  * @param config - the enable switch, replacement text, and order override.
  */
 export function apply(ctx: Context, config: Config = {}): void {
+  ctx.inject(['settings'], (child) => {
+    child.effect(() => child.settings.configure({ auto: false }, ctx.fiber), 'memory-protocol.settings')
+  })
   if ((config.enabled ?? true) === false) return
 
   const text = config.text ?? DEFAULT_PROTOCOL
